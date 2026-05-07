@@ -21,6 +21,45 @@ function useReveal() {
   }, []);
 }
 
+/* ─── Parallax ───────────────────────────────────────────────── */
+function useParallax() {
+  useEffect(() => {
+    let raf: number;
+
+    const tick = () => {
+      const y = window.scrollY;
+
+      // Hero video — classic parallax (moves down at 32% of scroll)
+      const vid = document.getElementById("parallax-vid");
+      if (vid) vid.style.transform = `translateY(${y * 0.32}px)`;
+
+      // Hero text — subtle float up for depth
+      const heroText = document.getElementById("parallax-hero-text");
+      if (heroText) heroText.style.transform = `translateY(${y * -0.08}px)`;
+
+      // Section-relative blobs via data-parallax attribute
+      document.querySelectorAll<HTMLElement>("[data-parallax]").forEach((el) => {
+        const speed = parseFloat(el.getAttribute("data-parallax") ?? "0");
+        const rect = el.getBoundingClientRect();
+        const fromCenter = rect.top + rect.height / 2 - window.innerHeight / 2;
+        el.style.transform = `translateY(${fromCenter * speed}px)`;
+      });
+    };
+
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+}
+
 /* ─── Stars ──────────────────────────────────────────────────── */
 function Stars({ n = 5 }: { n?: number }) {
   return (
@@ -142,11 +181,17 @@ function Hero({ onVisibilityChange }: { onVisibilityChange: (v: boolean) => void
       {/* Hero background — video with image fallback */}
       <div className="hero-img-wrap" id="hero-sentinel">
         <video
+          id="parallax-vid"
           autoPlay muted loop playsInline
           poster="/hero.png"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}>
+          style={{
+            position: "absolute",
+            top: "-12%", left: 0, right: 0,
+            width: "100%", height: "124%",
+            objectFit: "cover", display: "block",
+            willChange: "transform",
+          }}>
           <source src="/hero.mp4" type="video/mp4" />
-          {/* Falls back to poster image if video is missing */}
         </video>
         <div className="hero-img-top" />
         <div className="hero-img-fade" />
@@ -154,7 +199,7 @@ function Hero({ onVisibilityChange }: { onVisibilityChange: (v: boolean) => void
       </div>
 
       {/* Text */}
-      <div className="relative px-4 pt-6 pb-20 text-center">
+      <div id="parallax-hero-text" className="relative px-4 pt-6 pb-20 text-center" style={{ willChange: "transform" }}>
         <h1 className="font-bold leading-tight" style={{ fontSize: "clamp(2.4rem,5.5vw,4.2rem)", color: "var(--text-dark)", letterSpacing: "-0.035em", maxWidth: 700, margin: "0 auto 1rem" }}>
           Job Applications Were<br /><span style={{ fontWeight: 900 }}>Never This Easy.</span>
         </h1>
@@ -253,8 +298,12 @@ const featureList = [
 
 function Features() {
   return (
-    <section id="features" className="py-28 px-4" style={{ background: "var(--bg)" }}>
-      <div className="max-w-6xl mx-auto">
+    <section id="features" className="py-28 px-4 relative overflow-hidden" style={{ background: "var(--bg)" }}>
+      {/* Parallax blobs */}
+      <div data-parallax="0.18" style={{ position: "absolute", top: "8%", left: "-8%", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 70%)", pointerEvents: "none", willChange: "transform" }} />
+      <div data-parallax="-0.12" style={{ position: "absolute", bottom: "5%", right: "-6%", width: 440, height: 440, borderRadius: "50%", background: "radial-gradient(circle, rgba(5,150,105,0.07) 0%, transparent 70%)", pointerEvents: "none", willChange: "transform" }} />
+      <div data-parallax="0.08" style={{ position: "absolute", top: "45%", right: "12%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)", pointerEvents: "none", willChange: "transform" }} />
+      <div className="max-w-6xl mx-auto relative">
         {/* Header */}
         <div className="text-center mb-16">
           <p className="reveal text-[11px] font-semibold uppercase tracking-[0.14em] mb-4" style={{ color: "var(--text-muted)" }}>Platform Features</p>
@@ -271,6 +320,7 @@ function Features() {
           {featureList.map((f, i) => (
             <div
               key={f.label}
+              data-parallax={i % 3 === 0 ? "0.04" : i % 3 === 2 ? "-0.04" : "0"}
               className={`reveal reveal-delay-${(i % 3) + 1} card shine p-8 flex flex-col${f.wide ? " lg:col-span-2" : ""}`}
             >
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5 flex-shrink-0"
@@ -385,8 +435,10 @@ const reviews = [
 
 function Testimonials() {
   return (
-    <section id="testimonials" className="py-28 px-4" style={{ background: "var(--bg)" }}>
-      <div className="max-w-6xl mx-auto">
+    <section id="testimonials" className="py-28 px-4 relative overflow-hidden" style={{ background: "var(--bg)" }}>
+      <div data-parallax="0.14" style={{ position: "absolute", top: "10%", right: "-5%", width: 480, height: 480, borderRadius: "50%", background: "radial-gradient(circle, rgba(8,145,178,0.07) 0%, transparent 70%)", pointerEvents: "none", willChange: "transform" }} />
+      <div data-parallax="-0.1" style={{ position: "absolute", bottom: "8%", left: "-4%", width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, rgba(234,92,12,0.06) 0%, transparent 70%)", pointerEvents: "none", willChange: "transform" }} />
+      <div className="max-w-6xl mx-auto relative">
         <div className="text-center mb-16">
           <p className="reveal text-[11px] font-semibold uppercase tracking-[0.14em] mb-4" style={{ color: "var(--text-muted)" }}>Reviews</p>
           <h2 className="reveal reveal-delay-1 font-bold mb-3" style={{ fontSize: "clamp(2rem,4vw,3rem)", letterSpacing: "-0.035em" }}>
@@ -401,7 +453,7 @@ function Testimonials() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {reviews.map((r, i) => (
-            <div key={r.name} className={`reveal reveal-delay-${(i % 3) + 1} card p-7 flex flex-col`}>
+            <div key={r.name} data-parallax={i % 3 === 0 ? "0.05" : i % 3 === 2 ? "-0.05" : "0"} className={`reveal reveal-delay-${(i % 3) + 1} card p-7 flex flex-col`}>
               <div className="flex gap-0.5 mb-5"><Stars /></div>
               <p className="text-[15px] leading-relaxed flex-1 mb-6" style={{ color: "var(--text-mid)", lineHeight: 1.75 }}>
                 &ldquo;{r.q}&rdquo;
@@ -585,8 +637,11 @@ function FAQ() {
 /* ─── FINAL CTA ──────────────────────────────────────────────── */
 function FinalCTA() {
   return (
-    <section className="py-28 px-4" style={{ background: "#fff" }}>
-      <div className="max-w-3xl mx-auto text-center">
+    <section className="py-28 px-4 relative overflow-hidden" style={{ background: "#fff" }}>
+      <div data-parallax="0.2" style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(13,13,20,0.04) 0%, transparent 65%)", pointerEvents: "none", willChange: "transform" }} />
+      <div data-parallax="-0.15" style={{ position: "absolute", bottom: "-10%", left: "5%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(37,99,235,0.06) 0%, transparent 70%)", pointerEvents: "none", willChange: "transform" }} />
+      <div data-parallax="0.12" style={{ position: "absolute", top: "20%", right: "5%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 70%)", pointerEvents: "none", willChange: "transform" }} />
+      <div className="max-w-3xl mx-auto text-center relative">
         <p className="reveal text-[11px] font-semibold uppercase tracking-[0.14em] mb-6" style={{ color: "var(--text-muted)" }}>Get started today</p>
         <h2 className="reveal reveal-delay-1 font-black mb-5 leading-tight" style={{ fontSize: "clamp(2.4rem,5vw,3.8rem)", letterSpacing: "-0.04em", color: "var(--text-dark)" }}>
           Your next job is<br />closer than you think.
@@ -602,6 +657,8 @@ function FinalCTA() {
     </section>
   );
 }
+
+
 
 /* ─── FOOTER ─────────────────────────────────────────────────── */
 function Footer() {
@@ -676,6 +733,7 @@ function Footer() {
 /* ─── PAGE ───────────────────────────────────────────────────── */
 export default function Page() {
   useReveal();
+  useParallax();
   const [heroVisible, setHeroVisible] = useState(true);
 
   return (
